@@ -17,6 +17,4 @@ public class Curso {
         this.professores = new ArrayList<>();
         this.alunos = new ArrayList<>();
     }
-
-    // Outros métodos e getters/setters
 }
