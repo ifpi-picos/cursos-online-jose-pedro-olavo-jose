@@ -1,0 +1,18 @@
+CREATE TABLE Professor (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE Aluno (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE Curso (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    carga_horaria INTEGER NOT NULL
+);
