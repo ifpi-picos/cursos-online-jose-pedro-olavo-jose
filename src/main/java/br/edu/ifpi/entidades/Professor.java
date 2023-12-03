@@ -9,10 +9,11 @@ public class Professor {
     private String email;
     private List<Curso> cursosMinistrados;
 
-    public Professor(Long id, String nome, String email) {
+    public Professor(Long id, String nome, String email, List<Curso> cursosMinistrados) {
         this.id = id;
         this.nome = nome;
         this.email = email;
+        this.cursosMinistrados = cursosMinistrados;
     }
 
     public Long getId() {
@@ -27,5 +28,11 @@ public class Professor {
         return email;
     }
 
-    // Outros métodos e getters/setters necessários
+    public List<Curso> getCursosMinistrados() {
+        return cursosMinistrados;
+    }
+
+    public void adicionarCursoMinistrado(Curso curso) {
+        this.cursosMinistrados.add(curso);
+    }
 }
