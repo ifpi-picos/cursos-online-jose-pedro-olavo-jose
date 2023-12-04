@@ -16,7 +16,7 @@ import java.util.Scanner;
 public class AlunoDAO {
     private static Scanner scanner = new Scanner(System.in);
 
-    private static Connection getConnection() throws SQLException {
+    public static Connection getConnection() throws SQLException {
         String url = "jdbc:postgresql://localhost:5432/trabalho";
         String user = "postgres";
         String password = "postgres";
@@ -39,24 +39,38 @@ public class AlunoDAO {
         }
     }
 
-    public static void matricularAlunoEmCurso(long idAluno) {
-        try (Connection connection = getConnection()) {
+    public static void matricularAlunoNoCurso(Connection connection) {
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.println("Informe o ID do aluno:");
+            long idAluno = scanner.nextLong();
+    
             System.out.println("Informe o ID do curso:");
             long idCurso = scanner.nextLong();
-
-            matricularAlunoNoCurso(connection, idAluno, idCurso);
-            atribuirNotas(idCurso);
+    
+            String sql = "INSERT INTO alunos_cursos (id_aluno, id_curso) VALUES (?, ?)";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setLong(1, idAluno);
+                preparedStatement.setLong(2, idCurso);
+    
+                preparedStatement.executeUpdate();
+                System.out.println("Aluno matriculado com sucesso no curso!");
+            }
+            atribuirNotas(connection, idCurso);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public static void desmatricularAlunoDeCurso(long idAluno) {
-        try (Connection connection = getConnection()) {
+    public static void desmatricularAlunoDeCurso() {
+        try (Connection connection = getConnection(); Scanner scanner = new Scanner(System.in)) {
+            System.out.println("Informe o ID do aluno:");
+            long idAluno = scanner.nextLong();
+    
             System.out.println("Informe o ID do curso:");
             long idCurso = scanner.nextLong();
-
+    
             desmatricularAlunoDoCurso(connection, idAluno, idCurso);
+            System.out.println("Aluno desmatriculado com sucesso do curso!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -67,7 +81,7 @@ public class AlunoDAO {
 
         try (Connection connection = getConnection()) {
             String sql = "SELECT c.id, c.nome, c.status, c.carga_horaria FROM cursos c " +
-                         "JOIN matriculas m ON c.id = m.id_curso " +
+                         "JOIN alunos_cursos m ON c.id = m.id_curso " +
                          "WHERE m.id_aluno = ? AND EXISTS(SELECT 1 FROM notas n " +
                          "WHERE n.id_aluno = m.id_aluno AND n.id_curso = m.id_curso AND n.nota >= 7)";
 
@@ -98,7 +112,7 @@ public class AlunoDAO {
 
         try (Connection connection = getConnection()) {
             String sql = "SELECT c.id, c.nome, c.status, c.carga_horaria FROM cursos c " +
-                         "JOIN matriculas m ON c.id = m.id_curso " +
+                         "JOIN alunos_cursos m ON c.id = m.id_curso " +
                          "WHERE m.id_aluno = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -125,7 +139,7 @@ public class AlunoDAO {
 
     public static double getAproveitamento(long idAluno) {
         try (Connection connection = getConnection()) {
-            String sql = "SELECT COUNT(*) FROM matriculas m " +
+            String sql = "SELECT COUNT(*) FROM alunos_cursos m " +
                          "JOIN notas n ON m.id_aluno = n.id_aluno AND m.id_curso = n.id_curso " +
                          "WHERE m.id_aluno = ? AND n.nota >= 7";
 
@@ -166,50 +180,29 @@ public class AlunoDAO {
         }
     }
 
-    private static void matricularAlunoNoCurso(Connection connection, long idAluno, long idCurso) {
-        try {
-            String sql = "INSERT INTO matriculas (id_aluno, id_curso) VALUES (?, ?)";
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setLong(1, idAluno);
-                preparedStatement.setLong(2, idCurso);
-
-                preparedStatement.executeUpdate();
-                System.out.println("Aluno matriculado com sucesso no curso!");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
     private static void desmatricularAlunoDoCurso(Connection connection, long idAluno, long idCurso) {
         try {
-            String sql = "DELETE FROM matriculas WHERE id_aluno = ? AND id_curso = ?";
+            String sql = "DELETE FROM alunos_cursos WHERE id_aluno = ? AND id_curso = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, idAluno);
                 preparedStatement.setLong(2, idCurso);
 
                 preparedStatement.executeUpdate();
-                System.out.println("Aluno desmatriculado com sucesso do curso!");
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    private static void atribuirNotas(long idCurso) {
-        try (Connection connection = getConnection()) {
-            List<Aluno> alunos = getCursosAlunos(connection, idCurso);
+    public static void atribuirNotas(Connection connection, long idCurso) throws SQLException {
+        List<Aluno> alunos = getCursosAlunos(connection, idCurso);
 
-            for (Aluno aluno : alunos) {
-                System.out.println("Informe a nota para o aluno " + aluno.getNome() + ":");
-                double nota = scanner.nextDouble();
+        for (Aluno aluno : alunos) {
+            System.out.println("Informe a nota para o aluno " + aluno.getNome() + ":");
+            double nota = scanner.nextDouble();
 
-                atualizarNota(connection, aluno.getId(), idCurso, nota);
-            }
-
+            atualizarNota(connection, aluno.getId(), idCurso, nota);
             System.out.println("Notas atribuídas com sucesso!");
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -218,7 +211,7 @@ public class AlunoDAO {
 
         try {
             String sql = "SELECT a.id, a.nome, a.email FROM alunos a " +
-                         "JOIN matriculas m ON a.id = m.id_aluno " +
+                         "JOIN alunos_cursos m ON a.id = m.id_aluno " +
                          "WHERE m.id_curso = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -261,7 +254,7 @@ public class AlunoDAO {
 
     private static int getTotalCursosMatriculados(Connection connection, long idAluno) {
         try {
-            String sql = "SELECT COUNT(*) FROM matriculas WHERE id_aluno = ?";
+            String sql = "SELECT COUNT(*) FROM alunos_cursos WHERE id_aluno = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setLong(1, idAluno);
 
