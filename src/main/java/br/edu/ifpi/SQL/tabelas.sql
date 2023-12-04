@@ -10,6 +10,12 @@ CREATE TABLE professores (
     email VARCHAR(255) NOT NULL
 );
 
+CREATE TABLE professores (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL
+);
+
 CREATE TABLE alunos (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
